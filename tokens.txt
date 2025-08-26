@@ -1,0 +1,78 @@
+Tokens gerados pelo analisador léxico:
+==================================================
+
+Token 1:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 0
+
+Token 2:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 1
+
+Token 3:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 2
+
+Token 4:
+  Tipo: NUMERO
+  Valor: 1.5
+  Posição: 4
+
+Token 5:
+  Tipo: NUMERO
+  Valor: 2.0
+  Posição: 8
+
+Token 6:
+  Tipo: OPERADOR
+  Valor: *
+  Posição: 11
+
+Token 7:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 12
+
+Token 8:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 14
+
+Token 9:
+  Tipo: NUMERO
+  Valor: 6.0
+  Posição: 16
+
+Token 10:
+  Tipo: NUMERO
+  Valor: 3.0
+  Posição: 20
+
+Token 11:
+  Tipo: OPERADOR
+  Valor: /
+  Posição: 23
+
+Token 12:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 24
+
+Token 13:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 25
+
+Token 14:
+  Tipo: OPERADOR
+  Valor: +
+  Posição: 27
+
+Token 15:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 28
+
