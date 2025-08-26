@@ -1,6 +1,4 @@
 # Executador de expressões RPN com pilha
-# Fase 1 - Trabalho de Compiladores - Aluno 2
-# Funções principais de execução (testes em tests/test_executor.py)
 
 import sys
 import os
@@ -311,32 +309,42 @@ if __name__ == '__main__':
         historico = []
         memoria = {}
 
-        expressao1 = "(42.5 MEM)"
-        tokens1 = parse_expressao(expressao1)
-        resultado1, historico, memoria = executar_expressao(tokens1, historico, memoria)
+        # expressao1 = "(42.5 MEM)"
+        # tokens1 = parse_expressao(expressao1)
+        # resultado1, historico, memoria = executar_expressao(tokens1, historico, memoria)
         
-        # Recuperar valor
-        expressao2 = "(MEM)"
-        tokens2 = parse_expressao(expressao2)
-        resultado2, historico, memoria = executar_expressao(tokens2, historico, memoria)
+        # # Recuperar valor
+        # expressao2 = "(MEM)"
+        # tokens2 = parse_expressao(expressao2)
+        # resultado2, historico, memoria = executar_expressao(tokens2, historico, memoria)
         
-        # Recuperar valor
-        expressao3 = "(77 VAR)"
-        tokens3 = parse_expressao(expressao3)
-        resultado3, historico, memoria = executar_expressao(tokens3, historico, memoria)
+        # # Recuperar valor
+        # expressao3 = "(77 VAR)"
+        # tokens3 = parse_expressao(expressao3)
+        # resultado3, historico, memoria = executar_expressao(tokens3, historico, memoria)
 
-        expressao4 = "(VAR 3 +)"
-        tokens4 = parse_expressao(expressao4)
-        resultado4, historico, memoria = executar_expressao(tokens4, historico,memoria)
+        # expressao4 = "(VAR 3 +)"
+        # tokens4 = parse_expressao(expressao4)
+        # resultado4, historico, memoria = executar_expressao(tokens4, historico,memoria)
 
-        print(resultado1)
-        print(resultado2)
-        print(resultado3)
-        print(resultado4)
+        # print(resultado1)
+        # print(resultado2)
+        # print(resultado3)
+        # print(resultado4)
 
-        print(30*"=")
+        # print(30*"=")
 
-        print(memoria)
+        # print(memoria)
+
+        from utils.util import ler_arquivo
+
+        linhas = ler_arquivo("expressoes.txt")
+
+        for linha in linhas:
+            tokens = parse_expressao(linha)
+            resultado, historico, memoria = executar_expressao(tokens, historico, memoria)
+            print(historico)
+            print(resultado)
 
     except (ExecutorError, Exception) as e:
         print(f"Erro: {e}")
