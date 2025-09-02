@@ -7,72 +7,422 @@ Token 1:
   Posição: 0
 
 Token 2:
-  Tipo: PARENTESE_ABRE
-  Valor: (
-  Posição: 1
-
-Token 3:
-  Tipo: PARENTESE_ABRE
-  Valor: (
+  Tipo: NUMERO
+  Valor: 3.14
   Posição: 2
 
-Token 4:
-  Tipo: NUMERO
-  Valor: 1.5
-  Posição: 4
-
-Token 5:
+Token 3:
   Tipo: NUMERO
   Valor: 2.0
-  Posição: 8
+  Posição: 7
 
-Token 6:
+Token 4:
   Tipo: OPERADOR
-  Valor: *
+  Valor: +
+  Posição: 10
+
+Token 5:
+  Tipo: PARENTESE_FECHA
+  Valor: )
   Posição: 11
 
-Token 7:
-  Tipo: PARENTESE_FECHA
-  Valor: )
-  Posição: 12
-
-Token 8:
+Token 6:
   Tipo: PARENTESE_ABRE
   Valor: (
-  Posição: 14
+  Posição: 0
+
+Token 7:
+  Tipo: NUMERO
+  Valor: 10.5
+  Posição: 2
+
+Token 8:
+  Tipo: NUMERO
+  Valor: 3.2
+  Posição: 7
 
 Token 9:
-  Tipo: NUMERO
-  Valor: 6.0
-  Posição: 16
+  Tipo: OPERADOR
+  Valor: -
+  Posição: 10
 
 Token 10:
-  Tipo: NUMERO
-  Valor: 3.0
-  Posição: 20
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 11
 
 Token 11:
-  Tipo: OPERADOR
-  Valor: /
-  Posição: 23
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 0
 
 Token 12:
-  Tipo: PARENTESE_FECHA
-  Valor: )
-  Posição: 24
+  Tipo: NUMERO
+  Valor: 4.0
+  Posição: 2
 
 Token 13:
-  Tipo: PARENTESE_FECHA
-  Valor: )
-  Posição: 25
+  Tipo: NUMERO
+  Valor: 5.0
+  Posição: 6
 
 Token 14:
   Tipo: OPERADOR
-  Valor: +
-  Posição: 27
+  Valor: *
+  Posição: 9
 
 Token 15:
   Tipo: PARENTESE_FECHA
   Valor: )
-  Posição: 28
+  Posição: 10
+
+Token 16:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 0
+
+Token 17:
+  Tipo: NUMERO
+  Valor: 15.0
+  Posição: 2
+
+Token 18:
+  Tipo: NUMERO
+  Valor: 3.0
+  Posição: 7
+
+Token 19:
+  Tipo: OPERADOR
+  Valor: /
+  Posição: 10
+
+Token 20:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 11
+
+Token 21:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 0
+
+Token 22:
+  Tipo: NUMERO
+  Valor: 17
+  Posição: 2
+
+Token 23:
+  Tipo: NUMERO
+  Valor: 5
+  Posição: 5
+
+Token 24:
+  Tipo: OPERADOR
+  Valor: %
+  Posição: 6
+
+Token 25:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 7
+
+Token 26:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 0
+
+Token 27:
+  Tipo: NUMERO
+  Valor: 2.0
+  Posição: 2
+
+Token 28:
+  Tipo: NUMERO
+  Valor: 3
+  Posição: 6
+
+Token 29:
+  Tipo: OPERADOR
+  Valor: ^
+  Posição: 7
+
+Token 30:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 8
+
+Token 31:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 0
+
+Token 32:
+  Tipo: NUMERO
+  Valor: 100.0
+  Posição: 2
+
+Token 33:
+  Tipo: IDENTIFICADOR
+  Valor: MEM
+  Posição: 8
+
+Token 34:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 10
+
+Token 35:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 0
+
+Token 36:
+  Tipo: NUMERO
+  Valor: 5.0
+  Posição: 2
+
+Token 37:
+  Tipo: IDENTIFICADOR
+  Valor: VAR
+  Posição: 6
+
+Token 38:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 8
+
+Token 39:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 0
+
+Token 40:
+  Tipo: IDENTIFICADOR
+  Valor: MEM
+  Posição: 2
+
+Token 41:
+  Tipo: IDENTIFICADOR
+  Valor: VAR
+  Posição: 6
+
+Token 42:
+  Tipo: OPERADOR
+  Valor: +
+  Posição: 9
+
+Token 43:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 10
+
+Token 44:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 0
+
+Token 45:
+  Tipo: NUMERO
+  Valor: 1
+  Posição: 2
+
+Token 46:
+  Tipo: PALAVRA_RESERVADA
+  Valor: RES
+  Posição: 4
+
+Token 47:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 6
+
+Token 48:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 0
+
+Token 49:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 1
+
+Token 50:
+  Tipo: NUMERO
+  Valor: 2.0
+  Posição: 3
+
+Token 51:
+  Tipo: NUMERO
+  Valor: 3.0
+  Posição: 7
+
+Token 52:
+  Tipo: OPERADOR
+  Valor: *
+  Posição: 10
+
+Token 53:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 11
+
+Token 54:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 13
+
+Token 55:
+  Tipo: NUMERO
+  Valor: 4.0
+  Posição: 15
+
+Token 56:
+  Tipo: NUMERO
+  Valor: 2.0
+  Posição: 19
+
+Token 57:
+  Tipo: OPERADOR
+  Valor: /
+  Posição: 22
+
+Token 58:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 23
+
+Token 59:
+  Tipo: OPERADOR
+  Valor: -
+  Posição: 25
+
+Token 60:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 26
+
+Token 61:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 0
+
+Token 62:
+  Tipo: NUMERO
+  Valor: 2
+  Posição: 2
+
+Token 63:
+  Tipo: PALAVRA_RESERVADA
+  Valor: RES
+  Posição: 4
+
+Token 64:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 6
+
+Token 65:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 0
+
+Token 66:
+  Tipo: IDENTIFICADOR
+  Valor: VAR
+  Posição: 2
+
+Token 67:
+  Tipo: NUMERO
+  Valor: 2.0
+  Posição: 6
+
+Token 68:
+  Tipo: OPERADOR
+  Valor: *
+  Posição: 9
+
+Token 69:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 10
+
+Token 70:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 0
+
+Token 71:
+  Tipo: IDENTIFICADOR
+  Valor: MEM
+  Posição: 2
+
+Token 72:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 4
+
+Token 73:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 0
+
+Token 74:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 1
+
+Token 75:
+  Tipo: NUMERO
+  Valor: 1.5
+  Posição: 3
+
+Token 76:
+  Tipo: NUMERO
+  Valor: 2.0
+  Posição: 7
+
+Token 77:
+  Tipo: OPERADOR
+  Valor: *
+  Posição: 10
+
+Token 78:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 11
+
+Token 79:
+  Tipo: PARENTESE_ABRE
+  Valor: (
+  Posição: 13
+
+Token 80:
+  Tipo: NUMERO
+  Valor: 6.0
+  Posição: 15
+
+Token 81:
+  Tipo: NUMERO
+  Valor: 3.0
+  Posição: 19
+
+Token 82:
+  Tipo: OPERADOR
+  Valor: /
+  Posição: 22
+
+Token 83:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 23
+
+Token 84:
+  Tipo: OPERADOR
+  Valor: +
+  Posição: 25
+
+Token 85:
+  Tipo: PARENTESE_FECHA
+  Valor: )
+  Posição: 26
 
