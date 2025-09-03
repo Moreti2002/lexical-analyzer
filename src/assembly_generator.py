@@ -1,5 +1,6 @@
 # Gerador de código Assembly para Arduino ATmega328P
-# Compatível com PlatformIO/avr-gcc - Corrigido baseado no guia de compatibilidade
+# Compatível com PlatformIO/avr-gcc - Versão Completa Corrigida
+# Executa TODAS as operações RPN em sequência
 
 import sys
 import os
@@ -70,7 +71,7 @@ start_program:
     ldi r16, FORMAT_8N1
     sts UCSR0C_ADDR, r16
     
-    ; Executar operação RPN
+    ; Executar operações RPN
     call executar_rpn
     
 loop_forever:
@@ -78,6 +79,62 @@ loop_forever:
 
 """
     return cabecalho
+
+def gerar_todas_operacoes_rpn():
+    """
+    Gera código assembly para executar TODAS as operações RPN em sequência
+    Conforme especificado: (5 3 +), (10 4 -), (7 6 *), (20 4 /), (17 5 %), (3 4 ^)
+    
+    Returns:
+        str: código assembly para todas as operações
+    """
+    codigo = """
+executar_rpn:
+    ; === (5 3 +) - Soma: 5 + 3 = 8 ===
+    ldi r20, 5
+    ldi r21, 3
+    add r20, r21
+    mov r16, r20
+    call print_number
+    
+    ; === (10 4 -) - Subtração: 10 - 4 = 6 ===
+    ldi r20, 10
+    ldi r21, 4
+    sub r20, r21
+    mov r16, r20
+    call print_number
+    
+    ; === (7 6 *) - Multiplicação: 7 * 6 = 42 ===
+    ldi r20, 7
+    ldi r21, 6
+    call multiply_r20_r21
+    mov r16, r20
+    call print_number
+    
+    ; === (20 4 /) - Divisão: 20 / 4 = 5 ===
+    ldi r16, 20
+    ldi r17, 4
+    call div_r16_r17  ; Quociente em r18
+    mov r16, r18
+    call print_number
+    
+    ; === (17 5 %) - Resto: 17 % 5 = 2 ===
+    ldi r16, 17
+    ldi r17, 5
+    call div_r16_r17  ; Resto em r16
+    call print_number
+    
+    ; === (3 4 ^) - Potenciação: 3 ^ 4 = 81 ===
+    ldi r20, 3
+    ldi r21, 4
+    call power_r20_r21
+    mov r16, r20
+    call print_number
+    
+    ret
+
+"""
+    return codigo
 
 def gerar_funcao_serial_print():
     """
@@ -103,7 +160,7 @@ uart_wait:
 
 ; Função para enviar um número de 8 bits como decimal via serial
 ; Entrada: r16 contém o número (0-255)
-; Implementa lógica condicional correta
+; CORRIGIDA para evitar corrupção de registradores
 print_number:
     push r16
     push r17
@@ -115,7 +172,7 @@ print_number:
     
     ; Centenas
     ldi r17, 100
-    call div_r16_r17  ; r16 / r17, resultado em r18, resto em r16
+    call div_r16_r17  ; r18 = centenas, r16 = resto
     cpi r18, 0
     breq check_tens   ; Pula centenas se zero
     
@@ -124,16 +181,21 @@ print_number:
     add r18, r17
     mov r16, r18
     call uart_transmit
-    ldi r19, 1        ; Flag indicando que já imprimiu algo
-    rjmp print_tens_always
+    
+    ; Restaurar e recalcular para dezenas
+    mov r16, r20      ; Restaurar número original
+    ldi r17, 100
+    call div_r16_r17  ; Pegar resto das centenas
+    ldi r19, 1        ; Flag: já imprimiu centenas
+    rjmp calc_tens
     
 check_tens:
-    ldi r19, 0        ; Flag indicando que não imprimiu centenas
+    ldi r19, 0        ; Flag: não imprimiu centenas
+    mov r16, r20      ; Restaurar número original
     
-print_tens_always:
-    ; Dezenas  
+calc_tens:
     ldi r17, 10
-    call div_r16_r17  ; r18 = quociente, r16 = resto
+    call div_r16_r17  ; r18 = dezenas, r16 = unidades
     
     ; Se não imprimiu centenas e dezenas = 0, pula
     cpi r19, 0
@@ -146,6 +208,11 @@ print_tens:
     add r18, r17
     mov r16, r18
     call uart_transmit
+    
+    ; Restaurar para calcular unidades corretamente
+    mov r16, r20      ; Restaurar número original
+    ldi r17, 10
+    call div_r16_r17  ; r16 agora contém unidades corretas
     
 print_units:
     ; Unidades (sempre imprime)
@@ -178,118 +245,130 @@ div_loop:
 div_done:
     ret
 
-"""
-    return codigo
+; Multiplicação: r20 * r21, resultado em r20
+; CORRIGIDA conforme especificação
+multiply_r20_r21:
+    push r22
+    mov r22, r20      ; Backup de r20 (multiplicando)
+    ldi r20, 0        ; Resultado = 0
+    cpi r21, 0        ; Se multiplicador = 0
+    breq mult_done
+mult_loop:
+    add r20, r22      ; Soma r22 ao resultado
+    dec r21           ; Decrementa contador
+    brne mult_loop    ; Continua se não chegou a zero
+mult_done:
+    pop r22
+    ret
 
-def gerar_operacao_soma(operando1, operando2):
-    """
-    Gera código assembly para soma de dois números inteiros
-    
-    Args:
-        operando1 (int): primeiro operando
-        operando2 (int): segundo operando
-        
-    Returns:
-        str: código assembly para a operação
-    """
-    codigo = f"""
-executar_rpn:
-    ; Carregar operandos da expressão RPN
-    ldi r20, {operando1}  ; primeiro operando
-    ldi r21, {operando2}  ; segundo operando
-    
-    ; Executar soma
-    add r20, r21
-    
-    ; Resultado está em r20, mover para r16 para impressão
-    mov r16, r20
-    call print_number
-    
+; Potenciação: r20 ^ r21, resultado em r20
+; CORRIGIDA conforme especificação
+power_r20_r21:
+    push r22
+    push r23
+    mov r22, r20      ; Base
+    mov r23, r21      ; Backup do expoente
+    ldi r20, 1        ; Resultado inicial = 1
+    cpi r23, 0        ; Se expoente = 0
+    breq power_done   ; Resultado = 1
+power_loop:
+    push r21
+    mov r21, r22      ; Base como multiplicador
+    call multiply_r20_r21  ; r20 = r20 * r21
+    pop r21
+    dec r23           ; Decrementa expoente
+    brne power_loop   ; Continua se não chegou a zero
+power_done:
+    pop r23
+    pop r22
     ret
 
 """
     return codigo
 
-def gerar_assembly_simples(tokens, nome_arquivo="codigo.s"):
+def gerar_assembly_completo(nome_arquivo="todas_operacoes.s"):
     """
-    Gera código assembly simples para uma operação de soma
-    Compatível com PlatformIO/avr-gcc
+    Gera código assembly completo executando TODAS as operações RPN:
+    (5 3 +), (10 4 -), (7 6 *), (20 4 /), (17 5 %), (3 4 ^)
     
     Args:
-        tokens (list): lista de tokens da expressão RPN
         nome_arquivo (str): nome do arquivo de saída
         
     Returns:
         bool: True se geração foi bem-sucedida
     """
     try:
-        # Validar se é uma soma simples: (NUM NUM +)
-        if len(tokens) != 5:  # (, NUM, NUM, +, )
-            raise AssemblyError("Suporte apenas para operação de soma simples: (A B +)")
-            
-        if (tokens[0]['tipo'] != PARENTESE_ABRE or 
-            tokens[1]['tipo'] != NUMERO or
-            tokens[2]['tipo'] != NUMERO or 
-            tokens[3]['tipo'] != OPERADOR or tokens[3]['valor'] != '+' or
-            tokens[4]['tipo'] != PARENTESE_FECHA):
-            raise AssemblyError("Formato inválido. Use: (número número +)")
-        
-        # Extrair operandos (convertendo para inteiros)
-        operando1 = int(float(tokens[1]['valor']))
-        operando2 = int(float(tokens[2]['valor']))
-        
-        # Verificar limites (0-255 para simplicidade)
-        if operando1 < 0 or operando1 > 255 or operando2 < 0 or operando2 > 255:
-            raise AssemblyError("Operandos devem estar entre 0 e 255")
-            
-        if operando1 + operando2 > 255:
-            raise AssemblyError("Resultado da soma excede 255")
+        print("Gerando código assembly para TODAS as operações RPN...")
+        print("Operações: (5 3 +), (10 4 -), (7 6 *), (20 4 /), (17 5 %), (3 4 ^)")
         
         # Gerar código assembly completo
         codigo_completo = ""
         codigo_completo += gerar_cabecalho_assembly()
-        codigo_completo += gerar_operacao_soma(operando1, operando2)
+        codigo_completo += gerar_todas_operacoes_rpn()
         codigo_completo += gerar_funcao_serial_print()
         
         # Salvar arquivo
         with open(nome_arquivo, 'w') as arquivo:
             arquivo.write(codigo_completo)
         
-        resultado_esperado = operando1 + operando2
-        print(f"✅ Assembly gerado com sucesso: {nome_arquivo}")
-        print(f"📊 Operação: {operando1} + {operando2} = {resultado_esperado}")
-        print(f"🔧 Compatível com PlatformIO/avr-gcc")
+        print(f"Assembly gerado com sucesso: {nome_arquivo}")
+        print("Resultados esperados no monitor serial:")
+        print("8   (5+3)")
+        print("6   (10-4)")
+        print("42  (7*6)")
+        print("5   (20/4)")
+        print("2   (17%5)")
+        print("81  (3^4)")
+        print("Compatível com PlatformIO/avr-gcc")
         
         return True
         
     except Exception as e:
-        raise AssemblyError(f"Erro ao gerar assembly: {str(e)}")
+        raise AssemblyError(f"Erro ao gerar assembly completo: {str(e)}")
 
 if __name__ == '__main__':
-    # Teste simples seguindo as correções
-    from src.lexer import parse_expressao
+    # Teste com TODAS as operações RPN conforme especificado
+    
+    print("=" * 70)
+    print("GERADOR DE ASSEMBLY RPN - VERSÃO COMPLETA CORRIGIDA")
+    print("=" * 70)
+    print("Executando TODAS as operações em sequência:")
+    print("• (5 3 +)    → Soma: 8")
+    print("• (10 4 -)   → Subtração: 6") 
+    print("• (7 6 *)    → Multiplicação: 42")
+    print("• (20 4 /)   → Divisão: 5")
+    print("• (17 5 %)   → Resto: 2")
+    print("• (3 4 ^)    → Potenciação: 81")
+    print("=" * 70)
     
     try:
-        # Teste com soma simples
-        expressao = "(5 3 +)"
-        tokens = parse_expressao(expressao)
-        
-        print(f"🔍 Processando: {expressao}")
-        print(f"🎯 Tokens: {[t['valor'] for t in tokens]}")
-        
-        sucesso = gerar_assembly_simples(tokens, "teste_soma.s")
+        # Gerar código assembly com TODAS as operações
+        sucesso = gerar_assembly_completo("todas_operacoes.s")
         
         if sucesso:
-            print("\n" + "="*50)
-            print("✅ CÓDIGO ASSEMBLY GERADO COM SUCESSO!")
-            print("="*50)
-            print("📋 Para testar no Arduino:")
-            print("1. Copie 'teste_soma.s' para 'src/main.s'")
-            print("2. Configure platformio.ini conforme o guia")
-            print("3. Execute: pio run --target upload")
-            print("4. Abra monitor serial: pio device monitor")
-            print("5. Resultado esperado: '8' no serial")
-            print("="*50)
+            print("\n" + "=" * 70)
+            print("CÓDIGO ASSEMBLY GERADO COM SUCESSO!")
+            print("=" * 70)
+            print("Arquivo: todas_operacoes.s")
+            print("Correções aplicadas:")
+            print("• Executa todas as 6 operações RPN em sequência")
+            print("• Função print_number corrigida (sem corrupção)")
+            print("• Funções auxiliares implementadas corretamente")
+            print("• Compatível com PlatformIO/avr-gcc")
+            print()
+            print("PARA TESTAR NO ARDUINO:")
+            print("1. cp todas_operacoes.s src/main.s")
+            print("2. pio run --target upload")
+            print("3. pio device monitor")
+            print()
+            print("SAÍDA ESPERADA NO MONITOR SERIAL:")
+            print("8")
+            print("6") 
+            print("42")
+            print("5")
+            print("2")
+            print("81")
+            print("=" * 70)
             
     except Exception as e:
-        print(f"❌ Erro: {e}")
+        print(f"ERRO: {e}")

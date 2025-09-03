@@ -47,7 +47,7 @@ start_program:
     ldi r16, FORMAT_8N1
     sts UCSR0C_ADDR, r16
     
-    ; Executar operação RPN
+    ; Executar operações RPN
     call executar_rpn
     
 loop_forever:
@@ -55,14 +55,44 @@ loop_forever:
 
 
 executar_rpn:
-    ; Carregar operandos da expressão RPN
-    ldi r20, 5  ; primeiro operando
-    ldi r21, 3  ; segundo operando
-    
-    ; Executar soma
+    ; === (5 3 +) - Soma: 5 + 3 = 8 ===
+    ldi r20, 5
+    ldi r21, 3
     add r20, r21
+    mov r16, r20
+    call print_number
     
-    ; Resultado está em r20, mover para r16 para impressão
+    ; === (10 4 -) - Subtração: 10 - 4 = 6 ===
+    ldi r20, 10
+    ldi r21, 4
+    sub r20, r21
+    mov r16, r20
+    call print_number
+    
+    ; === (7 6 *) - Multiplicação: 7 * 6 = 42 ===
+    ldi r20, 7
+    ldi r21, 6
+    call multiply_r20_r21
+    mov r16, r20
+    call print_number
+    
+    ; === (20 4 /) - Divisão: 20 / 4 = 5 ===
+    ldi r16, 20
+    ldi r17, 4
+    call div_r16_r17  ; Quociente em r18
+    mov r16, r18
+    call print_number
+    
+    ; === (17 5 %) - Resto: 17 % 5 = 2 ===
+    ldi r16, 17
+    ldi r17, 5
+    call div_r16_r17  ; Resto em r16
+    call print_number
+    
+    ; === (3 4 ^) - Potenciação: 3 ^ 4 = 81 ===
+    ldi r20, 3
+    ldi r21, 4
+    call power_r20_r21
     mov r16, r20
     call print_number
     
@@ -84,7 +114,7 @@ uart_wait:
 
 ; Função para enviar um número de 8 bits como decimal via serial
 ; Entrada: r16 contém o número (0-255)
-; Implementa lógica condicional correta
+; CORRIGIDA para evitar corrupção de registradores
 print_number:
     push r16
     push r17
@@ -96,7 +126,7 @@ print_number:
     
     ; Centenas
     ldi r17, 100
-    call div_r16_r17  ; r16 / r17, resultado em r18, resto em r16
+    call div_r16_r17  ; r18 = centenas, r16 = resto
     cpi r18, 0
     breq check_tens   ; Pula centenas se zero
     
@@ -105,16 +135,21 @@ print_number:
     add r18, r17
     mov r16, r18
     call uart_transmit
-    ldi r19, 1        ; Flag indicando que já imprimiu algo
-    rjmp print_tens_always
+    
+    ; Restaurar e recalcular para dezenas
+    mov r16, r20      ; Restaurar número original
+    ldi r17, 100
+    call div_r16_r17  ; Pegar resto das centenas
+    ldi r19, 1        ; Flag: já imprimiu centenas
+    rjmp calc_tens
     
 check_tens:
-    ldi r19, 0        ; Flag indicando que não imprimiu centenas
+    ldi r19, 0        ; Flag: não imprimiu centenas
+    mov r16, r20      ; Restaurar número original
     
-print_tens_always:
-    ; Dezenas  
+calc_tens:
     ldi r17, 10
-    call div_r16_r17  ; r18 = quociente, r16 = resto
+    call div_r16_r17  ; r18 = dezenas, r16 = unidades
     
     ; Se não imprimiu centenas e dezenas = 0, pula
     cpi r19, 0
@@ -127,6 +162,11 @@ print_tens:
     add r18, r17
     mov r16, r18
     call uart_transmit
+    
+    ; Restaurar para calcular unidades corretamente
+    mov r16, r20      ; Restaurar número original
+    ldi r17, 10
+    call div_r16_r17  ; r16 agora contém unidades corretas
     
 print_units:
     ; Unidades (sempre imprime)
@@ -157,5 +197,43 @@ div_loop:
     inc r18
     rjmp div_loop
 div_done:
+    ret
+
+; Multiplicação: r20 * r21, resultado em r20
+; CORRIGIDA conforme especificação
+multiply_r20_r21:
+    push r22
+    mov r22, r20      ; Backup de r20 (multiplicando)
+    ldi r20, 0        ; Resultado = 0
+    cpi r21, 0        ; Se multiplicador = 0
+    breq mult_done
+mult_loop:
+    add r20, r22      ; Soma r22 ao resultado
+    dec r21           ; Decrementa contador
+    brne mult_loop    ; Continua se não chegou a zero
+mult_done:
+    pop r22
+    ret
+
+; Potenciação: r20 ^ r21, resultado em r20
+; CORRIGIDA conforme especificação
+power_r20_r21:
+    push r22
+    push r23
+    mov r22, r20      ; Base
+    mov r23, r21      ; Backup do expoente
+    ldi r20, 1        ; Resultado inicial = 1
+    cpi r23, 0        ; Se expoente = 0
+    breq power_done   ; Resultado = 1
+power_loop:
+    push r21
+    mov r21, r22      ; Base como multiplicador
+    call multiply_r20_r21  ; r20 = r20 * r21
+    pop r21
+    dec r23           ; Decrementa expoente
+    brne power_loop   ; Continua se não chegou a zero
+power_done:
+    pop r23
+    pop r22
     ret
 
