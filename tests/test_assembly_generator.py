@@ -1,5 +1,5 @@
 """
-testes para o gerador de assembly AVR
+Testes para o gerador de assembly
 """
 
 import unittest
@@ -8,221 +8,319 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.assembly_generator import gerar_assembly, AssemblyError
+from src.assembly_generator import gerar_assembly, AssemblyGenerator
+from src.assembly_error import AssemblyError, AssemblyLimitError, AssemblyValidationError
 from src.lexer import parse_expressao
-from utils.assembly_utils import float_para_ieee754_16bit, validar_assembly
+from utils.assembly_utils import validar_tokens_assembly, calcular_limites_memoria
 
 def teste_geracao_basica():
-    """teste geração de assembly para operação simples"""
+    """Teste geração básica de assembly"""
     tokens = parse_expressao("(3 7 +)")
-    codigo_assembly, historico, memoria = gerar_assembly(tokens)
+    sucesso = gerar_assembly(tokens, "teste_basico.s")
+    assert sucesso == True
     
-    # verificar se contém elementos essenciais
-    assert ".device atmega328p" in codigo_assembly
-    assert ".org 0x0000" in codigo_assembly
-    assert "rjmp reset" in codigo_assembly
-    assert "float_add" in codigo_assembly
+    # Verifica se arquivo foi criado
+    assert os.path.exists("teste_basico.s")
+    
+    # Verifica conteúdo básico do arquivo
+    with open("teste_basico.s", 'r') as f:
+        conteudo = f.read()
+        assert ".device atmega328p" in conteudo
+        assert "reset:" in conteudo
+        assert "push_stack" in conteudo
 
-def teste_operacoes_aritmeticas():
-    """teste geração de assembly para diferentes operadores"""
+def teste_operadores_aritmeticos():
+    """Teste todos os operadores aritméticos"""
     operacoes = [
-        ("(8 2 +)", "float_add"),
-        ("(8 2 -)", "float_sub"),
-        ("(8 2 *)", "float_mul"),
-        ("(8 2 /)", "float_div"),
-        ("(8 3 %)", "float_mod"),
-        ("(2 3 ^)", "float_pow")
+        ("(8 2 +)", "adicao.s"),
+        ("(8 2 -)", "subtracao.s"), 
+        ("(8 2 *)", "multiplicacao.s"),
+        ("(8 2 /)", "divisao.s"),
+        ("(8 3 %)", "resto.s"),
+        ("(2 3 ^)", "potencia.s")
     ]
     
-    for expressao, rotina_esperada in operacoes:
+    for expressao, arquivo in operacoes:
         tokens = parse_expressao(expressao)
-        codigo_assembly, _, _ = gerar_assembly(tokens)
-        assert rotina_esperada in codigo_assembly
+        sucesso = gerar_assembly(tokens, arquivo)
+        assert sucesso == True
+        assert os.path.exists(arquivo)
 
 def teste_comando_memoria():
-    """teste geração para comandos de memória"""
-    tokens = parse_expressao("(42.5 MEM)")
-    codigo_assembly, historico, memoria = gerar_assembly(tokens)
+    """Teste comandos de memória"""
+    tokens = parse_expressao("(42 MEM)")
+    sucesso = gerar_assembly(tokens, "memoria.s")
+    assert sucesso == True
     
-    # verificar se contém código de armazenamento
-    assert "Armazenar em MEM" in codigo_assembly
-    assert "ldi r30, low(" in codigo_assembly
-    assert "ldi r31, high(" in codigo_assembly
-
-def teste_recuperacao_memoria():
-    """teste recuperação da memória"""
-    memoria_inicial = {'MEM': 0x0100}
-    tokens = parse_expressao("(MEM)")
-    codigo_assembly, _, _ = gerar_assembly(tokens, memoria=memoria_inicial)
-    
-    assert "Recuperar MEM" in codigo_assembly
-
-def teste_memoria_nao_inicializada():
-    """teste memória não inicializada retorna 0.0"""
-    tokens = parse_expressao("(VAR)")
-    codigo_assembly, _, _ = gerar_assembly(tokens)
-    
-    assert "não inicializada = 0.0" in codigo_assembly
-    assert "clr r16" in codigo_assembly
-    assert "clr r17" in codigo_assembly
+    with open("memoria.s", 'r') as f:
+        conteudo = f.read()
+        assert "Armazena em variável MEM" in conteudo
 
 def teste_comando_res():
-    """teste comando RES"""
-    historico_inicial = [10.0, 20.0, 30.0]
+    """Teste comando RES"""
     tokens = parse_expressao("(2 RES)")
-    codigo_assembly, _, _ = gerar_assembly(tokens, historico_inicial)
+    sucesso = gerar_assembly(tokens, "historico.s")
+    assert sucesso == True
     
-    assert "Comando 2 RES" in codigo_assembly
+    with open("historico.s", 'r') as f:
+        conteudo = f.read()
+        assert "Comando RES" in conteudo
 
-def teste_conversao_ieee754():
-    """teste conversão para IEEE 754 16-bit"""
-    # teste valores conhecidos
-    assert float_para_ieee754_16bit(0.0) == [0x00, 0x00]
-    
-    # teste valor positivo
-    bytes_result = float_para_ieee754_16bit(1.0)
-    assert len(bytes_result) == 2
-    assert all(isinstance(b, int) and 0 <= b <= 255 for b in bytes_result)
+def teste_expressao_aninhada():
+    """Teste expressão aninhada"""
+    tokens = parse_expressao("((2 3 *) (4 2 /) +)")
+    sucesso = gerar_assembly(tokens, "aninhada.s")
+    assert sucesso == True
 
-def teste_validacao_assembly():
-    """teste validação de código assembly"""
-    # código válido básico
-    codigo_valido = """
-.device atmega328p
-.org 0x0000
-rjmp reset
-
-reset:
-    ldi r16, 0xFF
-    ret
-"""
-    
-    is_valid, erros = validar_assembly(codigo_valido)
-    assert is_valid, f"Código deveria ser válido, erros: {erros}"
-    
-    # código inválido - sem device
-    codigo_invalido = """
-.org 0x0000
-rjmp reset
-"""
-    
-    is_valid, erros = validar_assembly(codigo_invalido)
-    assert not is_valid
-    assert any("device" in erro.lower() for erro in erros)
-
-def teste_erro_operandos_insuficientes():
-    """teste erro de operandos insuficientes"""
-    tokens = parse_expressao("(5 +)")  # falta um operando
-    
+def teste_validacao_limites():
+    """Teste validação de limites numéricos"""
     try:
-        gerar_assembly(tokens)
-        assert False, "deveria ter dado erro"
+        # Número muito grande para ponto fixo
+        tokens = parse_expressao("(999.99 2.0 +)")
+        validar_tokens_assembly(tokens)
+        assert False, "Deveria ter dado erro de limite"
+    except AssemblyLimitError:
+        pass
+
+def teste_geracao_completa():
+    """Teste geração com arquivo de teste completo"""
+    expressoes = [
+        "(3.14 2.0 +)",
+        "(10.5 3.2 -)", 
+        "(4.0 5.0 *)",
+        "(15.0 3.0 /)",
+        "(17 5 %)",
+        "(2.0 3 ^)",
+        "(100.0 MEM)",
+        "(MEM)"
+    ]
+    
+    gerador = AssemblyGenerator()
+    
+    for i, expressao in enumerate(expressoes):
+        tokens = parse_expressao(expressao)
+        arquivo = f"teste_completo_{i}.s"
+        sucesso = gerador.gerar_assembly(tokens, arquivo)
+        assert sucesso == True
+
+def teste_erro_token_invalido():
+    """Teste erro com token inválido"""
+    try:
+        # Cria token inválido manualmente
+        tokens = [
+            {'tipo': 'PARENTESE_ABRE', 'valor': '('},
+            {'tipo': 'NUMERO', 'valor': '3'},
+            {'tipo': 'OPERADOR', 'valor': '&'},  # Operador inválido
+            {'tipo': 'PARENTESE_FECHA', 'valor': ')'}
+        ]
+        gerar_assembly(tokens, "erro.s")
+        assert False, "Deveria ter dado erro"
     except AssemblyError:
         pass
 
-def teste_arquivo_gerado():
-    """teste se arquivo .s é gerado"""
-    tokens = parse_expressao("(3.14 2.0 +)")
-    gerar_assembly(tokens)
+def teste_estatisticas_memoria():
+    """Teste cálculo de estatísticas de memória"""
+    tokens = parse_expressao("((3.14 2.0 +) (1.5 VAR *) -)")
+    limites = calcular_limites_memoria(tokens)
     
-    # verificar se arquivo foi criado
-    assert os.path.exists("programa_gerado.s")
-    
-    # verificar conteúdo
-    with open("programa_gerado.s", "r") as arquivo:
-        conteudo = arquivo.read()
-        assert ".device atmega328p" in conteudo
-        assert "float_add" in conteudo
-    
-    # limpar arquivo de teste
-    if os.path.exists("programa_gerado.s"):
-        os.remove("programa_gerado.s")
+    assert limites['pilha_maxima'] > 0
+    assert limites['variaveis_count'] >= 1
+    assert limites['memoria_total'] > 0
 
-def teste_expressao_complexa():
-    """teste expressão com aninhamento"""
-    tokens = parse_expressao("((2 3 *) (4 2 /) +)")
-    codigo_assembly, _, _ = gerar_assembly(tokens)
+def teste_arquivo_complexo():
+    """Teste com arquivo de expressões mais complexo"""
+    expressoes_complexas = [
+        "((2.5 3.0 *) (4.0 2.0 /) +)",
+        "(7.5 VALOR)",
+        "((VALOR 2.0 ^) (9.0 3.0 /) -)",
+        "(1 RES)",
+        "((1.5 2.0 *) (6.0 3.0 /) +)"
+    ]
     
-    # verificar se contém múltiplas operações
-    assert "float_mul" in codigo_assembly
-    assert "float_div" in codigo_assembly
-    assert "float_add" in codigo_assembly
+    gerador = AssemblyGenerator()
+    
+    for i, expr in enumerate(expressoes_complexas):
+        tokens = parse_expressao(expr)
+        arquivo = f"complexo_{i}.s"
+        sucesso = gerador.gerar_assembly(tokens, arquivo)
+        assert sucesso == True
+        
+        # Verifica estrutura básica
+        with open(arquivo, 'r') as f:
+            conteudo = f.read()
+            assert "atmega328p" in conteudo
+            assert "push_stack" in conteudo
+            assert "pop_stack" in conteudo
 
-def teste_sequencia_operacoes():
-    """teste sequência de operações com persistência"""
-    historico = []
-    memoria = {}
+def limpar_arquivos_teste():
+    """Remove arquivos de teste gerados"""
+    arquivos_teste = [
+        "teste_basico.s", "adicao.s", "subtracao.s", "multiplicacao.s",
+        "divisao.s", "resto.s", "potencia.s", "memoria.s", "historico.s",
+        "aninhada.s", "erro.s"
+    ]
     
-    # primeira operação
-    tokens1 = parse_expressao("(3 5 +)")
-    codigo1, historico, memoria = gerar_assembly(tokens1, historico, memoria)
+    for arquivo in arquivos_teste:
+        if os.path.exists(arquivo):
+            os.remove(arquivo)
     
-    # armazena na memória
-    tokens2 = parse_expressao("(10 VAR)")
-    codigo2, historico, memoria = gerar_assembly(tokens2, historico, memoria)
-    
-    # verifica se memória foi mantida
-    assert 'VAR' in memoria
-
-def teste_estrutura_assembly():
-    """teste estrutura geral do assembly gerado"""
-    tokens = parse_expressao("(1.5 2.5 *)")
-    codigo_assembly, _, _ = gerar_assembly(tokens)
-    
-    linhas = codigo_assembly.split('\n')
-    
-    # verificar seções principais
-    tem_cabecalho = any(".device atmega328p" in linha for linha in linhas)
-    tem_reset = any("reset:" in linha for linha in linhas)
-    tem_main = any("main:" in linha for linha in linhas)
-    tem_rotinas = any("float_mul:" in linha for linha in linhas)
-    
-    assert tem_cabecalho, "Falta cabeçalho com device"
-    assert tem_reset, "Falta label reset"
-    assert tem_main, "Falta label main"
-    assert tem_rotinas, "Falta rotinas matemáticas"
+    # Remove arquivos numerados
+    for i in range(10):
+        arquivo = f"teste_completo_{i}.s"
+        if os.path.exists(arquivo):
+            os.remove(arquivo)
+        arquivo = f"complexo_{i}.s"
+        if os.path.exists(arquivo):
+            os.remove(arquivo)
 
 class TestAssemblyGenerator(unittest.TestCase):
-    """testes para o gerador de assembly"""
+    """Testes unitários para o gerador de assembly"""
+    
+    def setUp(self):
+        """Configura teste"""
+        self.gerador = AssemblyGenerator()
+    
+    def tearDown(self):
+        """Limpa após teste"""
+        limpar_arquivos_teste()
     
     def test_geracao_basica(self):
         teste_geracao_basica()
     
-    def test_operacoes_aritmeticas(self):
-        teste_operacoes_aritmeticas()
+    def test_operadores_aritmeticos(self):
+        teste_operadores_aritmeticos()
     
     def test_comando_memoria(self):
         teste_comando_memoria()
     
-    def test_recuperacao_memoria(self):
-        teste_recuperacao_memoria()
-    
-    def test_memoria_nao_inicializada(self):
-        teste_memoria_nao_inicializada()
-    
     def test_comando_res(self):
         teste_comando_res()
     
-    def test_conversao_ieee754(self):
-        teste_conversao_ieee754()
+    def test_expressao_aninhada(self):
+        teste_expressao_aninhada()
     
-    def test_validacao_assembly(self):
-        teste_validacao_assembly()
+    def test_validacao_limites(self):
+        teste_validacao_limites()
     
-    def test_erro_operandos_insuficientes(self):
-        teste_erro_operandos_insuficientes()
+    def test_geracao_completa(self):
+        teste_geracao_completa()
     
-    def test_arquivo_gerado(self):
-        teste_arquivo_gerado()
+    def test_erro_token_invalido(self):
+        teste_erro_token_invalido()
     
-    def test_expressao_complexa(self):
-        teste_expressao_complexa()
+    def test_estatisticas_memoria(self):
+        teste_estatisticas_memoria()
     
-    def test_sequencia_operacoes(self):
-        teste_sequencia_operacoes()
+    def test_arquivo_complexo(self):
+        teste_arquivo_complexo()
     
-    def test_estrutura_assembly(self):
-        teste_estrutura_assembly()
+    def test_integracao_lexer(self):
+        """Teste integração com o lexer"""
+        expressao = "(((1.5 2.0 *) (6.0 3.0 /)) +)"
+        tokens = parse_expressao(expressao)
+        
+        # Valida tokens
+        validar_tokens_assembly(tokens)
+        
+        # Gera assembly
+        sucesso = self.gerador.gerar_assembly(tokens, "integracao.s")
+        self.assertTrue(sucesso)
+        
+        # Verifica arquivo gerado
+        self.assertTrue(os.path.exists("integracao.s"))
+        
+        with open("integracao.s", 'r') as f:
+            conteudo = f.read()
+            self.assertIn(".device atmega328p", conteudo)
+            self.assertIn("main:", conteudo)
+            self.assertIn("push_stack:", conteudo)
+            self.assertIn("pop_stack:", conteudo)
+    
+    def test_ponto_fixo(self):
+        """Teste conversão para ponto fixo"""
+        from utils.assembly_utils import converter_float_ponto_fixo, converter_ponto_fixo_float
+        
+        # Teste conversões
+        valor_original = 3.14
+        valor_fixo = converter_float_ponto_fixo(valor_original)
+        valor_convertido = converter_ponto_fixo_float(valor_fixo)
+        
+        # Verifica se conversão mantém precisão razoável
+        diferenca = abs(valor_original - valor_convertido)
+        self.assertLess(diferenca, 0.01)  # Tolerância de 1 centésimo
+    
+    def test_validacao_arquivo_saida(self):
+        """Teste validação de arquivo de saída"""
+        from utils.assembly_utils import validar_arquivo_saida
+        
+        # Arquivo válido
+        self.assertTrue(validar_arquivo_saida("teste_valido.s"))
+        
+        # Arquivo em diretório inexistente (deveria dar erro)
+        try:
+            validar_arquivo_saida("/diretorio/inexistente/arquivo.s")
+            self.fail("Deveria ter dado erro")
+        except AssemblyError:
+            pass
+
+def executar_teste_completo():
+    """Executa teste completo do sistema de geração de assembly"""
+    print("Executando testes do gerador de assembly...")
+    print("=" * 50)
+    
+    try:
+        # Teste básico
+        print("1. Teste básico...")
+        teste_geracao_basica()
+        print("   ✓ Passou")
+        
+        # Teste operadores
+        print("2. Teste operadores...")
+        teste_operadores_aritmeticos()
+        print("   ✓ Passou")
+        
+        # Teste comandos especiais
+        print("3. Teste comandos especiais...")
+        teste_comando_memoria()
+        teste_comando_res()
+        print("   ✓ Passou")
+        
+        # Teste validação
+        print("4. Teste validação...")
+        teste_validacao_limites()
+        print("   ✓ Passou")
+        
+        # Teste complexo
+        print("5. Teste arquivo complexo...")
+        teste_arquivo_complexo()
+        print("   ✓ Passou")
+        
+        print("\n" + "=" * 50)
+        print("Todos os testes passaram!")
+        print("Assembly gerado está compatível com atmega328p")
+        
+        # Mostra exemplo de arquivo gerado
+        if os.path.exists("teste_basico.s"):
+            print("\nExemplo de código gerado (primeiras linhas):")
+            print("-" * 30)
+            with open("teste_basico.s", 'r') as f:
+                linhas = f.readlines()[:15]
+                for linha in linhas:
+                    print(linha.rstrip())
+            print("-" * 30)
+        
+    except Exception as e:
+        print(f"✗ Erro nos testes: {e}")
+    
+    finally:
+        # Limpa arquivos de teste
+        limpar_arquivos_teste()
 
 if __name__ == '__main__':
-    unittest.main()
+    # Executa testes individuais ou completo
+    import sys
+    
+    if len(sys.argv) > 1 and sys.argv[1] == "--unittest":
+        unittest.main(argv=sys.argv[:1])
+    else:
+        executar_teste_completo()

@@ -1,0 +1,22 @@
+├── README.md
+├── expressoes.txt
+├── main.py
+├── src
+│   ├── __init__.py
+│   ├── __pycache__
+│   ├── executor.py
+│   ├── lexer.py
+│   └── token_types.py
+├── tests
+│   ├── __init__.py
+│   ├── test_executor.py
+│   └── test_lexer.py
+├── texto1.txt
+├── texto2.txt
+├── texto3.txt
+├── texto4.txt
+├── tokens.txt
+├── utils
+│   ├── __init__.py
+│   ├── __pycache__
+│   └── util.py
