@@ -1,0 +1,40 @@
+# Arquivo de teste 1 - Operações básicas e comandos especiais
+# Todas as operações aritméticas + comandos MEM e RES
+
+# operações aritméticas básicas
+(5 3 +)
+(10 4 -)
+(6 7 *)
+(20 5 /)
+(17 5 %)
+(2 8 ^)
+
+# operações com números decimais
+(3.14 2.71 +)
+(10.5 3.2 -)
+(2.5 4.0 *)
+(15.6 3.0 /)
+
+# armazenar valores na memória
+(42 MEM)
+(100 VAR)
+(25.5 RESULTADO)
+
+# recuperar valores da memória
+(MEM)
+(VAR)
+(RESULTADO)
+
+# operações usando memória
+(MEM VAR +)
+(RESULTADO 2 *)
+
+# comando RES
+(1 RES)
+(2 RES)
+(3 RES)
+
+# expressões aninhadas
+((2 3 +) (4 5 *) -)
+(((1 2 +) (3 4 *) +) 2 /)
+((10 5 /) (3 2 ^) *)

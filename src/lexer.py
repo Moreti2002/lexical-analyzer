@@ -1,4 +1,5 @@
-# Analisador léxico com autômato finito determinístico
+# analisador léxico com autômato finito determinístico
+# atualizado para suportar operadores relacionais
 
 import sys
 import os
@@ -44,7 +45,7 @@ def limpar_buffer(contexto):
     """limpa o buffer do contexto"""
     contexto['buffer'] = ''
 
-# Estados do AFD implementados como funções
+# estados do AFD implementados como funções
 
 def estado_inicial(char, contexto):
     """
@@ -58,7 +59,7 @@ def estado_inicial(char, contexto):
         str: próximo estado
     """
     if eh_espaco(char):
-        return 'inicial'  # Ignora espaços
+        return 'inicial'
     elif eh_digito(char):
         contexto['buffer'] += char
         return 'numero'
@@ -68,6 +69,9 @@ def estado_inicial(char, contexto):
     elif eh_operador_valido(char):
         adicionar_token_ao_contexto(contexto, OPERADOR, char)
         return 'inicial'
+    elif eh_operador_relacional(char):
+        contexto['buffer'] += char
+        return 'operador_relacional'
     elif eh_parentese_abre(char):
         contexto['contador_parenteses'] += 1
         adicionar_token_ao_contexto(contexto, PARENTESE_ABRE, char)
@@ -102,11 +106,11 @@ def estado_numero(char, contexto):
         contexto['buffer'] += char
         return 'numero_decimal'
     else:
-        # Finaliza o número inteiro
+        # finaliza o número inteiro
         adicionar_token_ao_contexto(contexto, NUMERO, contexto['buffer'])
         limpar_buffer(contexto)
         
-        # Processa o caractere atual no estado inicial
+        # processa o caractere atual no estado inicial
         return processar_char_no_estado(char, contexto, 'inicial')
 
 def estado_numero_decimal(char, contexto):
@@ -127,16 +131,16 @@ def estado_numero_decimal(char, contexto):
         raise LexerError(f"Número malformado: múltiplos pontos decimais em '{contexto['buffer'] + char}'", 
                        contexto['posicao'] - len(contexto['buffer']))
     else:
-        # Verifica se tem dígitos após o ponto
+        # verifica se tem dígitos após o ponto
         if contexto['buffer'].endswith('.'):
             raise LexerError(f"Número malformado: ponto decimal sem dígitos subsequentes em '{contexto['buffer']}'", 
                            contexto['posicao'] - len(contexto['buffer']))
         
-        # Finaliza o número decimal
+        # finaliza o número decimal
         adicionar_token_ao_contexto(contexto, NUMERO, contexto['buffer'])
         limpar_buffer(contexto)
         
-        # Processa o caractere atual no estado inicial
+        # processa o caractere atual no estado inicial
         return processar_char_no_estado(char, contexto, 'inicial')
 
 def estado_identificador(char, contexto):
@@ -154,7 +158,7 @@ def estado_identificador(char, contexto):
         contexto['buffer'] += char
         return 'identificador'
     else:
-        # Finaliza o identificador
+        # finaliza o identificador
         if eh_palavra_reservada(contexto['buffer']):
             adicionar_token_ao_contexto(contexto, PALAVRA_RESERVADA, contexto['buffer'])
         else:
@@ -162,8 +166,57 @@ def estado_identificador(char, contexto):
         
         limpar_buffer(contexto)
         
-        # Processa o caractere atual no estado inicial
+        # processa o caractere atual no estado inicial
         return processar_char_no_estado(char, contexto, 'inicial')
+
+def estado_operador_relacional(char, contexto):
+    """
+    estado para reconhecimento de operadores relacionais (==, !=, >=, <=)
+    
+    Args:
+        char (str): caractere atual
+        contexto (dict): contexto da análise
+        
+    Returns:
+        str: próximo estado
+    """
+    buffer_atual = contexto['buffer']
+    
+    # operadores de dois caracteres
+    if buffer_atual == '=' and char == '=':
+        contexto['buffer'] += char
+        adicionar_token_ao_contexto(contexto, OPERADOR_RELACIONAL, contexto['buffer'])
+        limpar_buffer(contexto)
+        return 'inicial'
+    
+    elif buffer_atual == '!' and char == '=':
+        contexto['buffer'] += char
+        adicionar_token_ao_contexto(contexto, OPERADOR_RELACIONAL, contexto['buffer'])
+        limpar_buffer(contexto)
+        return 'inicial'
+    
+    elif buffer_atual == '>' and char == '=':
+        contexto['buffer'] += char
+        adicionar_token_ao_contexto(contexto, OPERADOR_RELACIONAL, contexto['buffer'])
+        limpar_buffer(contexto)
+        return 'inicial'
+    
+    elif buffer_atual == '<' and char == '=':
+        contexto['buffer'] += char
+        adicionar_token_ao_contexto(contexto, OPERADOR_RELACIONAL, contexto['buffer'])
+        limpar_buffer(contexto)
+        return 'inicial'
+    
+    else:
+        # operador de um caractere (> ou <)
+        if buffer_atual in ['>', '<']:
+            adicionar_token_ao_contexto(contexto, OPERADOR_RELACIONAL, buffer_atual)
+            limpar_buffer(contexto)
+            return processar_char_no_estado(char, contexto, 'inicial')
+        else:
+            # caractere inválido após operador relacional
+            raise LexerError(f"Operador relacional inválido: '{buffer_atual + char}'", 
+                           contexto['posicao'] - len(buffer_atual))
 
 def processar_char_no_estado(char, contexto, estado):
     """
@@ -181,7 +234,8 @@ def processar_char_no_estado(char, contexto, estado):
         'inicial': estado_inicial,
         'numero': estado_numero,
         'numero_decimal': estado_numero_decimal,
-        'identificador': estado_identificador
+        'identificador': estado_identificador,
+        'operador_relacional': estado_operador_relacional
     }
     
     return estados[estado](char, contexto)
@@ -193,7 +247,7 @@ def finalizar_analise(contexto):
     Args:
         contexto (dict): contexto da análise
     """
-    # Se há conteúdo no buffer, processa o token final
+    # se há conteúdo no buffer, processa o token final
     if contexto['buffer']:
         if contexto['estado_atual'] == 'numero':
             adicionar_token_ao_contexto(contexto, NUMERO, contexto['buffer'])
@@ -206,8 +260,14 @@ def finalizar_analise(contexto):
                 adicionar_token_ao_contexto(contexto, PALAVRA_RESERVADA, contexto['buffer'])
             else:
                 adicionar_token_ao_contexto(contexto, IDENTIFICADOR, contexto['buffer'])
+        elif contexto['estado_atual'] == 'operador_relacional':
+            # operador relacional de um caractere
+            if contexto['buffer'] in ['>', '<']:
+                adicionar_token_ao_contexto(contexto, OPERADOR_RELACIONAL, contexto['buffer'])
+            else:
+                raise LexerError(f"Operador relacional incompleto: '{contexto['buffer']}'")
     
-    # Verifica balanceamento de parênteses
+    # verifica balanceamento de parênteses
     if contexto['contador_parenteses'] != 0:
         raise LexerError(f"Parênteses não balanceados: {contexto['contador_parenteses']} parênteses não fechados")
 
@@ -221,18 +281,18 @@ def validar_estrutura_rpn(tokens):
     if not tokens:
         raise LexerError("Expressão vazia")
     
-    # Deve começar com parêntese de abertura
+    # deve começar com parêntese de abertura
     if tokens[0]['tipo'] != PARENTESE_ABRE:
         raise LexerError("Expressão RPN deve começar com parêntese de abertura")
     
-    # Deve terminar com parêntese de fechamento
+    # deve terminar com parêntese de fechamento
     if tokens[-1]['tipo'] != PARENTESE_FECHA:
         raise LexerError("Expressão RPN deve terminar com parêntese de fechamento")
 
 def parse_expressao(linha):
     """
     função principal do analisador léxico
-    analisa uma linha RPN usando Autômato Finito Determinístico
+    analisa uma linha RPN usando autômato finito determinístico
     
     Args:
         linha (str): linha contendo expressão RPN
@@ -249,15 +309,15 @@ def parse_expressao(linha):
     contexto = criar_contexto()
     
     try:
-        # Processa cada caractere da linha
+        # processa cada caractere da linha
         for i, char in enumerate(linha):
             contexto['posicao'] = i + 1
             contexto['estado_atual'] = processar_char_no_estado(char, contexto, contexto['estado_atual'])
         
-        # Finaliza a análise
+        # finaliza a análise
         finalizar_analise(contexto)
         
-        # Validação adicional da estrutura RPN
+        # validação adicional da estrutura RPN
         validar_estrutura_rpn(contexto['tokens'])
         
         return contexto['tokens']
@@ -290,3 +350,25 @@ def salvar_tokens(tokens, nome_arquivo="tokens.txt"):
                 
     except Exception as e:
         print(f"Erro ao salvar tokens: {e}")
+
+if __name__ == '__main__':
+    # teste do analisador léxico
+    expressoes_teste = [
+        "(3 5 +)",
+        "(10 20 >)",
+        "(A B ==)",
+        "((X 0 >) ((X)) ((0)) IF)",
+        "((I 10 <) ((I 1 +) I) WHILE)"
+    ]
+    
+    print("=== TESTE DO ANALISADOR LÉXICO ===\n")
+    
+    for expr in expressoes_teste:
+        print(f"Expressão: {expr}")
+        try:
+            tokens = parse_expressao(expr)
+            print(f"  Tokens: {[t['valor'] for t in tokens]}")
+            print(f"  Tipos: {[t['tipo'] for t in tokens]}")
+        except LexerError as e:
+            print(f"  Erro: {e}")
+        print()

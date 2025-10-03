@@ -3,6 +3,7 @@
 # constantes para tipos de tokens
 NUMERO = "NUMERO"
 OPERADOR = "OPERADOR"
+OPERADOR_RELACIONAL = "OPERADOR_RELACIONAL"
 PARENTESE_ABRE = "PARENTESE_ABRE"
 PARENTESE_FECHA = "PARENTESE_FECHA"
 PALAVRA_RESERVADA = "PALAVRA_RESERVADA"
@@ -10,7 +11,8 @@ IDENTIFICADOR = "IDENTIFICADOR"
 
 # conjuntos de caracteres válidos
 OPERADORES_VALIDOS = {'+', '-', '*', '/', '%', '^'}
-PALAVRAS_RESERVADAS = {'RES'}
+OPERADORES_RELACIONAIS = {'>', '<', '=', '!'}
+PALAVRAS_RESERVADAS = {'RES', 'IF', 'WHILE', 'THEN', 'ELSE', 'PRINT'}
 
 def criar_token(tipo, valor, posicao=None):
     """
@@ -35,6 +37,10 @@ def criar_token(tipo, valor, posicao=None):
 def eh_operador_valido(char):
     """verifica se o caractere é um operador válido"""
     return char in OPERADORES_VALIDOS
+
+def eh_operador_relacional(char):
+    """verifica se o caractere é parte de operador relacional"""
+    return char in OPERADORES_RELACIONAIS
 
 def eh_palavra_reservada(palavra):
     """verifica se a palavra é uma palavra reservada"""

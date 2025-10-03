@@ -1,0 +1,51 @@
+# Arquivo de teste 3 - Casos complexos e casos de erro
+# Aninhamento profundo, combinações de estruturas e erros sintáticos
+
+# aninhamento profundo de expressões
+(((1 2 +) (3 4 *) +) ((5 6 -) (7 8 /) *) -)
+((((2 3 +) (4 5 *) -) ((6 7 +) (8 9 *) +) /) 2 ^)
+
+# combinação de todas as operações
+(10 INICIAL)
+((INICIAL 2 +) SOMA)
+((SOMA 3 *) PRODUTO)
+((PRODUTO 4 /) DIVISAO)
+((DIVISAO 5 %) RESTO)
+((RESTO 2 ^) POTENCIA)
+
+# usar resultado anterior
+(1 RES)
+((1 RES) 10 +)
+(2 RES)
+
+# estrutura de controle complexa
+(0 ACUMULADOR)
+(1 INDICE)
+((INDICE 5 <=) (((ACUMULADOR INDICE +) ACUMULADOR) ((INDICE 1 +) INDICE)) WHILE)
+
+# decisão com expressões complexas
+(((10 5 +) (20 10 -) >) (((10 5 +))) (((20 10 -))) IF)
+
+# múltiplas operações com memória
+(100 A)
+(50 B)
+(25 C)
+((A B +) TEMP1)
+((TEMP1 C -) TEMP2)
+((TEMP2 2 /) RESULTADO)
+
+# combinação de RES com estruturas de controle
+((1 RES) 0 >)
+(((1 RES) 0 >) (((1 RES) 1 +)) ((0)) IF)
+
+# aninhamento de estruturas de controle
+(10 MAX)
+(0 I)
+((I MAX <) (((I 5 <) (((I 1 +) I)) ((I)) IF)) WHILE)
+
+# casos de erro sintático (comentados para não quebrar a análise)
+# (3 5)          # falta operador
+# (3 +)          # falta operando
+# (3 5 + 2)      # token excedente
+# (3 5 +         # parêntese não fechado
+# 3 5 +)         # parêntese não aberto

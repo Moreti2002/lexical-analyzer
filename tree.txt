@@ -1,0 +1,33 @@
+.
+├── README.md
+├── assembly_texto1.s
+├── ex01.txt
+├── expressoes.txt
+├── i.md
+├── main.py
+├── resultados.txt
+├── src
+│   ├── __init__.py
+│   ├── __pycache__
+│   ├── assembly_generator.py
+│   ├── executor.py
+│   ├── lexer.py
+│   └── token_types.py
+├── tests
+│   ├── __init__.py
+│   ├── test_executor.py
+│   └── test_lexer.py
+├── texto1.txt
+├── texto2.txt
+├── texto3.txt
+├── todas_operacoes.s
+├── tokens.txt
+├── utils
+│   ├── __init__.py
+│   └── util.py
+└── venv
+    ├── bin
+    ├── include
+    └── lib
+
+9 directories, 22 files
