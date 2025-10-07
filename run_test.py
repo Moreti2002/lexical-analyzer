@@ -1,8 +1,28 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # script para executar todos os testes do projeto
 
 import sys
 import os
+import subprocess
+
+def detectar_python():
+    """detecta comando python disponível"""
+    for cmd in ['python3', 'python']:
+        try:
+            subprocess.run([cmd, '--version'], 
+                         stdout=subprocess.PIPE, 
+                         stderr=subprocess.PIPE, 
+                         check=True)
+            return cmd
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            continue
+    return None
+
+PYTHON_CMD = detectar_python()
+
+if PYTHON_CMD is None:
+    print("Erro: Python não encontrado no sistema")
+    sys.exit(1)
 
 def imprimir_secao(titulo):
     """imprime cabeçalho de seção"""
@@ -12,6 +32,9 @@ def imprimir_secao(titulo):
 
 def executar_comando(comando, descricao):
     """executa comando e reporta resultado"""
+    # substituir python por PYTHON_CMD
+    comando = comando.replace('python ', f'{PYTHON_CMD} ')
+    
     print(f"► {descricao}")
     print(f"  Comando: {comando}\n")
     

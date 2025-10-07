@@ -1,0 +1,17 @@
+{
+  "tipo": "EXPRESSAO",
+  "valor": null,
+  "filhos": [
+    {
+      "tipo": "COMANDO_RES",
+      "valor": null,
+      "filhos": [
+        {
+          "tipo": "NUMERO",
+          "valor": "3",
+          "filhos": []
+        }
+      ]
+    }
+  ]
+}

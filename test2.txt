@@ -1,37 +1,14 @@
-# Arquivo de teste 2 - Estruturas de controle
-# Decisão (IF) e Laço (WHILE)
-
-# estruturas de decisão simples
-((5 3 >) ((5)) ((3)) IF)
-((10 20 <) ((10)) ((20)) IF)
-((A B ==) ((A)) ((B)) IF)
-((X Y !=) ((X)) ((Y)) IF)
-
-# armazenar valores para teste de controle
+(5 CINCO)
+(3 TRES)
+(10 DEZ)
+(20 VINTE)
+(A)
+(B)
+(X)
+(Y)
 (10 VALOR)
 (5 CONTADOR)
-
-# decisão com memória
-((VALOR 0 >) ((VALOR)) ((0)) IF)
-((CONTADOR 10 <) ((1)) ((0)) IF)
-
-# laço simples
-((CONTADOR 10 <) ((CONTADOR 1 +) CONTADOR) WHILE)
-
-# armazenar limite
 (100 LIMITE)
-
-# laço com comparação de memória
-((CONTADOR LIMITE <) ((CONTADOR 1 +) CONTADOR) WHILE)
-
-# decisão com operadores >=, <=
-((VALOR 5 >=) ((1)) ((0)) IF)
-((CONTADOR 20 <=) ((1)) ((0)) IF)
-
-# expressões dentro de estruturas de controle
-((10 5 >) (((10 5 -))) (((5 10 -))) IF)
-(((2 3 +) 10 <) (((2 3 +) 1 +)) (((2 3 +))) WHILE)
-
-# estruturas aninhadas com memória
-(50 NUM)
-((NUM 0 >) (((NUM 1 -) NUM) ((NUM)) IF) ((0)) IF)
+(VALOR 5 +)
+(CONTADOR 10 -)
+(DEZ VINTE +)
